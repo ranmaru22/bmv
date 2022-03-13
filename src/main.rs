@@ -7,7 +7,6 @@ use argparse::Args;
 
 fn main() {
     let args = Args::new();
-
     let from = args.get_from();
     let to = args.get_to();
     let debug_input = args.get_input()[0];

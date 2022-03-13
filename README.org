@@ -1,0 +1,6 @@
+#+TITLE: bmv - Batch Move
+#+AUTHOR: Alex Sun (ranmaru22)
+
+Rename large numbers of files easily.
+
+/Placeholder Readme. Add later./
