@@ -4,15 +4,18 @@ extern crate clap;
 mod argparse;
 use argparse::Args;
 
+mod walker;
+use walker::Walker;
 
-fn main() {
+use std::{fs, io::Result};
+
+fn main() -> Result<()> {
     let args = Args::new();
-    let from = args.get_from();
-    let to = args.get_to();
-    let debug_input = args.get_input()[0];
+    let walker = Walker::new(&args);
 
-    if let Ok(re) = args.get_from_as_regex() {
-        let out = re.replace_all(debug_input, to);
-        println!("{}", out);
-    }
+    //println!("{}\n{:?}", args, walker);
+
+    walker.walk();
+
+    Ok(())
 }

@@ -18,10 +18,9 @@ impl Args {
                         .help("Don't ask for confirmation")
                 )
                 .arg(
-                    Arg::new("dryrun")
-                        .short('d')
-                        .long("dryrun")
-                        .help("Dry run, don't actually rename anything")
+                    Arg::new("include-hidden")
+                        .short('i')
+                        .help("Includen hidden files in wildcards")
                 )
                 .arg(
                     Arg::new("from")
@@ -33,41 +32,30 @@ impl Args {
                         .required(true)
                         .takes_value(true)
                 )
-                .arg(
-                    Arg::new("input")
-                        .required(true)
-                        .takes_value(true)
-                        .multiple_values(true)
-                )
                 .get_matches()
         )
     }
 
-    pub fn is_yes(&self) -> bool {
+    pub fn should_say_yes(&self) -> bool {
         self.0.is_present("yes")
     }
 
-    pub fn is_dryrun(&self) -> bool {
-        self.0.is_present("dryrun")
+    pub fn should_include_hidden(&self) -> bool {
+        self.0.is_present("include-hidden")
     }
 
-    pub fn get_from(&self) -> &str {
+    pub fn from(&self) -> &str {
         // SAFETY: Argument is required, it cannot be empty.
         self.0.value_of("from").unwrap()
     }
 
-    pub fn get_from_as_regex(&self) -> Result<Regex, Error> {
-        Regex::from_str(self.get_from())
+    pub fn from_as_regex(&self) -> Regex {
+        Regex::from_str(self.from()).expect("Invalid input path")
     }
 
-    pub fn get_to(&self) -> &str {
+    pub fn to(&self) -> &str {
         // SAFETY: Argument is required, it cannot be empty.
         self.0.value_of("to").unwrap()
-    }
-
-    pub fn get_input(&self) -> Vec<&str> {
-        // SAFETY: Argument is required, it cannot be empty.
-        self.0.values_of("input").unwrap().collect()
     }
 }
 
@@ -76,11 +64,10 @@ impl fmt::Display for Args {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "from: {}\nto: {}\ninput: {:?}\nyes? {}",
-            self.get_from(),
-            self.get_to(),
-            self.get_input(),
-            self.is_yes(),
+            "from: {}\nto: {}\n\nyes? {}",
+            self.from(),
+            self.to(),
+            self.should_say_yes(),
         )
     }
 }
