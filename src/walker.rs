@@ -1,6 +1,7 @@
 use crate::argparse::Args;
 use std::io::{Result, stdout};
 use std::fs;
+use regex::Regex;
 use termion::{raw::IntoRawMode, input::TermRead, event::Key};
 
 #[derive(Debug)]
@@ -52,12 +53,13 @@ impl<'a> Walker<'a> {
             let input = keys.next();
             match input {
                 Some(Ok(key)) => match key {
+                    // Handle C-c like saying 'no'
                     Key::Char('n') | Key::Ctrl('c') => break Ok(false),
                     Key::Char('y') => break Ok(true),
-                    _ => continue,
+                    _ => (),
                 }
-                Some(Err(e)) => e,
-                None => continue,
+                Some(Err(e)) => break Err(e),
+                _ => (),
             };
         }
     }
