@@ -1,6 +1,8 @@
 #+TITLE: bmv - Batch Move
 #+AUTHOR: Alex Sun (ranmaru22)
 
+[[https://github.com/ranmaru22/bmv/workflows/Build/badge.svg]]
+
 *Rename large numbers of files easily.*
 
 *bmv* is a Regex-based move/rename tool that can handle many files and directories
