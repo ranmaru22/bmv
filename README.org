@@ -11,8 +11,32 @@ bmv commands are formend in a /from-to/ pattern, similar to ~sed~ but in a simpl
 way. For example, ~sed -i 's/foo/bar/' <files>~ would be ~bmv 'foo' 'bar' <files>~
 in bmv. The replacement is then done across /all/ matches.
 
-** Examples
-/tbd/
+** Using capture groups
+Let's say you want to rename all =.foo= files anywhere in the directory tree from
+the folder you're currently in to =.bar=. This can be done like this:
+
+#+begin_src sh
+  bmv '(.*)\.foo' '$1.bar' ./**/*
+#+end_src
+
+You can use parentheses to capture any regular expression match in the first
+argument and then refer to it using ~$n~, where ~n~ is a number from 1 to to the
+total amount of groups you have, in the second.
+
+You can also use named capture groups, if you prefer, using the ~?P<name>~
+syntax. The example above would then look like this:
+
+#+begin_src sh
+  bmv '(?P<filename>.*)\.foo' '$filename.bar' ./**/*
+#+end_src
+
+If you want to use a literal dollar sign in the second argument, use ~$$~.
+
+** Look-arounds don't work.
+Yes, this is because Rust's [[https://docs.rs/regex/latest/regex/][regex crate]] does not support them and bmv uses it
+for its matching. Like the crate's docs say, "[i]n exchange, all searches
+execute in linear time with respect to the size of the regular expression and
+search text."
 
 ** It does not match hidden files when using globs!
 bmv by itself does not handle resolving the glob, it just receives a list of
