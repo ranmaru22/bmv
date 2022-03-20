@@ -1,7 +1,6 @@
 use crate::argparse::Args;
 use std::io::{Result, stdout};
 use std::fs;
-use regex::Regex;
 use termion::{raw::IntoRawMode, input::TermRead, event::Key};
 
 #[derive(Debug)]
