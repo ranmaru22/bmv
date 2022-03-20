@@ -7,15 +7,11 @@ use argparse::Args;
 mod walker;
 use walker::Walker;
 
-use std::{fs, io::Result};
+use std::io::Result;
 
 fn main() -> Result<()> {
     let args = Args::new();
-    let walker = Walker::new(&args);
+    let mut walker = Walker::new(&args);
 
-    //println!("{}\n{:?}", args, walker);
-
-    walker.walk();
-
-    Ok(())
+    walker.run()
 }

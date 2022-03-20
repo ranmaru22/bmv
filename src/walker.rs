@@ -1,62 +1,85 @@
 use crate::argparse::Args;
-use ignore::{WalkBuilder, WalkState};
-use globset::Glob;
-use std::{thread, sync::mpsc, io::Result};
+use std::io::{Result, stdout};
+use std::fs;
+use termion::{raw::IntoRawMode, input::TermRead, event::Key};
 
 #[derive(Debug)]
 pub struct Walker<'a> {
     args: &'a Args,
+    matching_files: Vec<&'a str>,
+    targets: Vec<String>,
 }
 
 impl<'a> Walker<'a> {
     pub fn new(args: &'a Args) -> Self {
-        Self { args }
+        let match_regex = args.from_as_regex();
+        let to = args.to();
+        let matching_files: Vec<_> = args.files().filter(|f| match_regex.is_match(f)).collect();
+        let targets = matching_files
+            .iter()
+            .map(|f| match_regex.replace_all(f, to).to_string())
+            .collect();
+
+        Self {
+            args,
+            matching_files,
+            targets,
+        }
     }
 
-    pub fn walk(&self) {
-        let root_path = &self.args.from()
-            .split("*")
-            .next()
-            .unwrap_or(&self.args.from());
+    fn print_all_filenames(&self) {
+        for (file, target) in self.matching_files.iter().zip(self.targets.iter()) {
+            println!("{} -> {}\r", file, target);
+        }
+    }
 
-        let walker = WalkBuilder::new(root_path)
-            .hidden(self.args.should_include_hidden())
-            .build_parallel();
+    fn ask_confirm(&mut self) -> Result<bool> {
+        let _stdout = stdout().into_raw_mode()?;
+        let stdin = termion::async_stdin();
 
-        let (tx, rx) = mpsc::channel::<String>();
+        if self.matching_files.is_empty() {
+            println!("No matches\r");
+            return Ok(false);
+        }
 
-        let collector = thread::spawn(move || -> Result<Vec<String>> {
-            let mut files = Vec::new();
-            for file in rx.iter() {
-                println!("{}", file);
-                files.push(file);
-            }
+        println!("The following files will be renamed:\r\n");
+        self.print_all_filenames();
+        println!("\r\nIs that ok? (y/n)\r");
 
-            Ok(files)
-        });
+        let mut keys = stdin.keys();
 
-        walker.run(|| {
-            let tx = tx.clone();
+        loop {
+            let input = keys.next();
+            match input {
+                Some(Ok(key)) => match key {
+                    Key::Char('n') | Key::Ctrl('c') => break Ok(false),
+                    Key::Char('y') => break Ok(true),
+                    _ => continue,
+                }
+                Some(Err(e)) => e,
+                None => continue,
+            };
+        }
+    }
 
-            Box::new(move |filename| {
-                if let Ok(fp) = filename {
-                    if !fp.path().is_file() {
-                        WalkState::Continue
-                    } else {
-                        let file = fp.path().display().to_string();
-                        let regex = self.args.from_as_regex().clone();
+    fn rename_files(&mut self) -> Result<()> {
+        for (from,to) in self.matching_files.iter().zip(self.targets.iter()) {
+            fs::rename(from, to)?;
+        }
 
-                        if regex.is_match(&file) {
-                            match tx.send(file) {
-                                Ok(_) => WalkState::Continue,
-                                Err(_) => WalkState::Quit,
-                            }
-                        } else { WalkState::Continue }
-                    }
-                } else { WalkState::Continue }
-            })
-        });
+        Ok(())
+    }
 
-        drop(tx);
+    pub fn run(&mut self) -> Result<()> {
+        if self.args.should_say_yes() {
+            self.rename_files()?;
+            println!("The following files have been renamed:");
+            self.print_all_filenames();
+        } else if let Ok(true) = self.ask_confirm() {
+            self.rename_files()?;
+            println!("Done!");
+        }
+
+        Ok(())
     }
 }

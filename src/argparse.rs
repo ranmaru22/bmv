@@ -1,6 +1,6 @@
+use clap::{Arg, ArgMatches, Command, Values};
+use regex::Regex;
 use std::{fmt, str::FromStr};
-use clap::{Arg, Command, ArgMatches};
-use regex::{Regex, Error};
 
 #[derive(Debug)]
 pub struct Args(ArgMatches);
@@ -15,33 +15,22 @@ impl Args {
                 .arg(
                     Arg::new("yes")
                         .short('y')
-                        .help("Don't ask for confirmation")
+                        .help("Don't ask for confirmation"),
                 )
+                .arg(Arg::new("from").required(true).takes_value(true))
+                .arg(Arg::new("to").required(true).takes_value(true))
                 .arg(
-                    Arg::new("include-hidden")
-                        .short('i')
-                        .help("Includen hidden files in wildcards")
-                )
-                .arg(
-                    Arg::new("from")
+                    Arg::new("files")
                         .required(true)
                         .takes_value(true)
+                        .multiple_values(true),
                 )
-                .arg(
-                    Arg::new("to")
-                        .required(true)
-                        .takes_value(true)
-                )
-                .get_matches()
+                .get_matches(),
         )
     }
 
     pub fn should_say_yes(&self) -> bool {
         self.0.is_present("yes")
-    }
-
-    pub fn should_include_hidden(&self) -> bool {
-        self.0.is_present("include-hidden")
     }
 
     pub fn from(&self) -> &str {
@@ -57,6 +46,11 @@ impl Args {
         // SAFETY: Argument is required, it cannot be empty.
         self.0.value_of("to").unwrap()
     }
+
+    pub fn files(&self) -> Values {
+        // SAFETY: Argument is required, it cannot be empty.
+        self.0.values_of("files").unwrap()
+    }
 }
 
 // For Debug purposes only
@@ -64,10 +58,10 @@ impl fmt::Display for Args {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "from: {}\nto: {}\n\nyes? {}",
+            "from: {}\nto: {}\n\nfiles {:?}",
             self.from(),
             self.to(),
-            self.should_say_yes(),
+            self.files().collect::<Vec<&str>>(),
         )
     }
 }
