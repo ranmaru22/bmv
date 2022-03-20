@@ -10,6 +10,10 @@ license = "GPL-3.0-or-later"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "bmv"
+path = "src/main.rs"
+
 [dependencies]
 regex = "1.5.5"
 termion = "1.5.6"

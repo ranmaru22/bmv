@@ -2,6 +2,7 @@
 #+AUTHOR: Alex Sun (ranmaru22)
 
 [[https://github.com/ranmaru22/bmv/workflows/Build/badge.svg]]
+[[https://github.com/ranmaru22/bmv/workflows/Release/badge.svg]]
 
 *Rename large numbers of files easily.*
 
