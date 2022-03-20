@@ -12,7 +12,7 @@ license = "GPL-3.0-or-later"
 
 [dependencies]
 regex = "1.5.5"
-tokio = { version = "1", features = ["full"] }
+termion = "1.5.6"
 
 [dependencies.clap]
 version = "~3.1.6"
