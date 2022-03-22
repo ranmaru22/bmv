@@ -2,6 +2,7 @@
 
 ![Build](https://github.com/ranmaru22/bmv/workflows/Build/badge.svg)
 ![Release](https://github.com/ranmaru22/bmv/workflows/Release/badge.svg)
+![crates.io](https://img.shields.io/crates/v/bmv.svg)
 
 **Rename large numbers of files easily.**
 
