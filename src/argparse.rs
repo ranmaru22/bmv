@@ -1,5 +1,5 @@
 use clap::{Arg, ArgMatches, Command, Values};
-use regex::Regex;
+use regex::{Error, Regex};
 use std::{fmt, str::FromStr};
 
 #[derive(Debug)]
@@ -38,8 +38,8 @@ impl Args {
         self.0.value_of("from").unwrap()
     }
 
-    pub fn from_as_regex(&self) -> Regex {
-        Regex::from_str(self.from()).expect("Invalid input path")
+    pub fn from_as_regex(&self) -> Result<Regex, Error> {
+        Regex::from_str(self.from())
     }
 
     pub fn to(&self) -> &str {

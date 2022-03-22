@@ -1,5 +1,5 @@
 use crate::argparse::Args;
-use std::io::{Result, stdout};
+use std::io::{Result, stdout, Error, ErrorKind};
 use std::fs;
 use termion::{raw::IntoRawMode, input::TermRead, event::Key};
 
@@ -11,19 +11,22 @@ pub struct Walker<'a> {
 }
 
 impl<'a> Walker<'a> {
-    pub fn new(args: &'a Args) -> Self {
-        let match_regex = args.from_as_regex();
-        let to = args.to();
-        let matching_files: Vec<_> = args.files().filter(|f| match_regex.is_match(f)).collect();
-        let targets = matching_files
-            .iter()
-            .map(|f| match_regex.replace_all(f, to).to_string())
-            .collect();
+    pub fn new(args: &'a Args) -> Result<Self> {
+        if let Ok(match_regex) = args.from_as_regex() {
+            let to = args.to();
+            let matching_files: Vec<_> = args.files().filter(|f| match_regex.is_match(f)).collect();
+            let targets = matching_files
+                .iter()
+                .map(|f| match_regex.replace_all(f, to).to_string())
+                .collect();
 
-        Self {
-            args,
-            matching_files,
-            targets,
+            Ok(Self {
+                args,
+                matching_files,
+                targets,
+            })
+        } else {
+            Err(Error::new(ErrorKind::InvalidInput, "Invalid regular expession"))
         }
     }
 
