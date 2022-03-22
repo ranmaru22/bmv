@@ -8,7 +8,7 @@ pub struct Args(ArgMatches);
 impl Args {
     pub fn new() -> Self {
         Self(
-            Command::new("brep")
+            Command::new("bmv")
                 .version(crate_version!())
                 .author(crate_authors!())
                 .about(crate_description!())
