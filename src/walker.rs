@@ -1,7 +1,8 @@
 use crate::argparse::Args;
-use std::io::{Result, stdout, Error, ErrorKind};
+use colored::Colorize;
 use std::fs;
-use termion::{raw::IntoRawMode, input::TermRead, event::Key};
+use std::io::{stdout, Error, ErrorKind, Result, Write};
+use termion::{event::Key, input::TermRead, raw::IntoRawMode};
 
 #[derive(Debug)]
 pub struct Walker<'a> {
@@ -26,28 +27,57 @@ impl<'a> Walker<'a> {
                 targets,
             })
         } else {
-            Err(Error::new(ErrorKind::InvalidInput, "Invalid regular expession"))
+            Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Invalid regular expession",
+            ))
         }
     }
 
-    fn print_all_filenames(&self) {
-        for (file, target) in self.matching_files.iter().zip(self.targets.iter()) {
-            println!("{} -> {}\r", file, target);
+    fn print_all_filenames(&self) -> Result<()> {
+        let mut stdout = stdout().into_raw_mode()?;
+
+        // SAFETY: We've already deternmined that it's a valid expression in the constructor.
+        let re = self.args.from_as_regex().unwrap();
+        let to = self.args.to();
+
+        let print_coloured = |text: &str, repl: &str, colour: &str| {
+            let mut split = re.split(text).peekable();
+            while let Some(part) = split.next() {
+                print!("{}", part);
+
+                // Don't print the replacement on the last match. Otherwise it will
+                // append all strings with it.
+                if split.peek().is_some() {
+                    print!("{}", repl.color(colour));
+                }
+            }
+        };
+
+        for file in self.matching_files.iter() {
+            let from = re.find(file).unwrap().as_str();
+            let to = re.replace(from, to);
+
+            print_coloured(file, &from, "yellow");
+            print!(" -> ");
+            print_coloured(file, &to, "blue");
+            print!("\r\n");
         }
+
+        stdout.flush()?;
+
+        Ok(())
     }
 
     fn ask_confirm(&mut self) -> Result<bool> {
-        let _stdout = stdout().into_raw_mode()?;
+        let mut stdout = stdout().into_raw_mode()?;
         let stdin = termion::async_stdin();
 
-        if self.matching_files.is_empty() {
-            println!("No matches\r");
-            return Ok(false);
-        }
-
         println!("The following files will be renamed:\r\n");
-        self.print_all_filenames();
+        self.print_all_filenames()?;
         println!("\r\nIs that ok? (y/n)\r");
+
+        stdout.flush()?;
 
         let mut keys = stdin.keys();
 
@@ -59,7 +89,7 @@ impl<'a> Walker<'a> {
                     Key::Char('n') | Key::Ctrl('c') => break Ok(false),
                     Key::Char('y') => break Ok(true),
                     _ => (),
-                }
+                },
                 Some(Err(e)) => break Err(e),
                 _ => (),
             };
@@ -67,7 +97,7 @@ impl<'a> Walker<'a> {
     }
 
     fn rename_files(&mut self) -> Result<()> {
-        for (from,to) in self.matching_files.iter().zip(self.targets.iter()) {
+        for (from, to) in self.matching_files.iter().zip(self.targets.iter()) {
             fs::rename(from, to)?;
         }
 
@@ -75,10 +105,12 @@ impl<'a> Walker<'a> {
     }
 
     pub fn run(&mut self) -> Result<()> {
-        if self.args.should_say_yes() {
+        if self.matching_files.is_empty() {
+            println!("No matches.");
+        } else if self.args.should_say_yes() {
             self.rename_files()?;
             println!("The following files have been renamed:");
-            self.print_all_filenames();
+            self.print_all_filenames()?;
         } else if let Ok(true) = self.ask_confirm() {
             self.rename_files()?;
             println!("Done!");
