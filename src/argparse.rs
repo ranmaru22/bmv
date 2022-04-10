@@ -1,5 +1,5 @@
 use clap::{Arg, ArgMatches, Command, Values};
-use regex::Regex;
+use regex::{Error, Regex};
 use std::{fmt, str::FromStr};
 
 #[derive(Debug)]
@@ -33,21 +33,21 @@ impl Args {
         self.0.is_present("yes")
     }
 
-    pub fn from(&self) -> &str {
+    pub fn get_from(&self) -> &str {
         // SAFETY: Argument is required, it cannot be empty.
         self.0.value_of("from").unwrap()
     }
 
-    pub fn from_as_regex(&self) -> Regex {
-        Regex::from_str(self.from()).expect("Invalid input path")
+    pub fn get_from_as_regex(&self) -> Result<Regex, Error> {
+        Regex::from_str(self.get_from())
     }
 
-    pub fn to(&self) -> &str {
+    pub fn get_to(&self) -> &str {
         // SAFETY: Argument is required, it cannot be empty.
         self.0.value_of("to").unwrap()
     }
 
-    pub fn files(&self) -> Values {
+    pub fn get_files(&self) -> Values {
         // SAFETY: Argument is required, it cannot be empty.
         self.0.values_of("files").unwrap()
     }
@@ -59,9 +59,9 @@ impl fmt::Display for Args {
         write!(
             f,
             "from: {}\nto: {}\n\nfiles {:?}",
-            self.from(),
-            self.to(),
-            self.files().collect::<Vec<&str>>(),
+            self.get_from(),
+            self.get_to(),
+            self.get_files().collect::<Vec<&str>>(),
         )
     }
 }

@@ -3,7 +3,7 @@ name = "bmv"
 description = "Batch Move -- rename large numbers of files easily"
 authors = ["Alex Sun <alexsun@maibox.org>"]
 readme = "README.md"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 repository = "https://github.com/ranmaru22/bmv"
 license = "GPL-3.0-or-later"
@@ -15,6 +15,7 @@ name = "bmv"
 path = "src/main.rs"
 
 [dependencies]
+colored = "2.0.0"
 regex = "1.5.5"
 termion = "1.5.6"
 
