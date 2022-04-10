@@ -13,9 +13,9 @@ pub struct Walker<'a> {
 
 impl<'a> Walker<'a> {
     pub fn new(args: &'a Args) -> Result<Self> {
-        if let Ok(match_regex) = args.from_as_regex() {
-            let to = args.to();
-            let matching_files: Vec<_> = args.files().filter(|f| match_regex.is_match(f)).collect();
+        if let Ok(match_regex) = args.get_from_as_regex() {
+            let to = args.get_to();
+            let matching_files: Vec<_> = args.get_files().filter(|f| match_regex.is_match(f)).collect();
             let targets = matching_files
                 .iter()
                 .map(|f| match_regex.replace_all(f, to).to_string())
@@ -38,8 +38,8 @@ impl<'a> Walker<'a> {
         let mut stdout = stdout().into_raw_mode()?;
 
         // SAFETY: We've already deternmined that it's a valid expression in the constructor.
-        let re = self.args.from_as_regex().unwrap();
-        let to = self.args.to();
+        let re = self.args.get_from_as_regex().unwrap();
+        let to = self.args.get_to();
 
         let print_coloured = |text: &str, repl: &str, colour: &str| {
             let mut split = re.split(text).peekable();
@@ -58,7 +58,7 @@ impl<'a> Walker<'a> {
             let from = re.find(file).unwrap().as_str();
             let to = re.replace(from, to);
 
-            print_coloured(file, &from, "yellow");
+            print_coloured(file, from, "yellow");
             print!(" -> ");
             print_coloured(file, &to, "blue");
             print!("\r\n");
